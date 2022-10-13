@@ -17,16 +17,21 @@ import javax.swing.JFrame;
 public class CaroClient extends JFrame implements MouseListener,Runnable{
 
 	public static void main(String[] args) {
-		new CaroClient();
+		new CaroClient("may1","want to join");
 	}
 	int n = 15;
 	int s = 30;
 	int of = 50;
+	String name;
+	String keycode;
+	int player;
 	DataInputStream dis;
 	DataOutputStream dos;
 	List<Point> dadanh = new ArrayList<Point>();
-	public CaroClient() {
-		this.setTitle("Co caro");
+	public CaroClient(String name, String keycode) {
+		this.name = name;
+		this.keycode = keycode;
+		this.setTitle("Co caro "+this.name);
 		this.setSize(n*s+2*of,n*s+2*of);
 		this.setDefaultCloseOperation(3);
 		this.addMouseListener(this);
@@ -35,6 +40,7 @@ public class CaroClient extends JFrame implements MouseListener,Runnable{
 			Socket soc = new Socket("localhost",5003);
 			dis = new DataInputStream(soc.getInputStream());
 			dos = new DataOutputStream(soc.getOutputStream());
+			dos.writeUTF(this.keycode);
 		}catch(Exception e) {
 			
 		}
@@ -65,10 +71,32 @@ public class CaroClient extends JFrame implements MouseListener,Runnable{
 		while(true) {
 			try {
 				String s = dis.readUTF();
-				int ix = Integer.parseInt(s.split(",")[0]);
-				int iy = Integer.parseInt(s.split(",")[1]);
-				dadanh.add(new Point(ix, iy));
-				this.repaint();
+				System.out.println(s);
+				if (s.contains("initital")){
+					String dadanhdau = s.split(";")[1];
+					player = Integer.parseInt(s.split(";")[2]);
+
+					if(player<3)
+					{
+						System.out.println("you are a player");
+					}
+					else{
+						System.out.println("you are a viewer");
+					}
+					String[] arrayDaDanh = dadanhdau.split(",");
+					for (int i = 1; i < arrayDaDanh.length; i++) {
+						int x = Integer.parseInt(arrayDaDanh[i].split(" ")[0]);
+						int y = Integer.parseInt(arrayDaDanh[i].split(" ")[1]);
+						dadanh.add(new Point(x, y));			
+					}
+					this.repaint();
+				}
+				else{
+					int x = Integer.parseInt(s.split(" ")[0]);
+					int y = Integer.parseInt(s.split(" ")[1]);
+					dadanh.add(new Point(x, y));
+					this.repaint();
+				}
 			}catch(Exception e) {
 				
 			}
@@ -91,11 +119,14 @@ public class CaroClient extends JFrame implements MouseListener,Runnable{
 		}
 		
 		// Gui toa do len server
-		try {
-			dos.writeUTF(ix+","+iy);
-		}catch(Exception e1) {
-			
+		if(player <= 2)
+		{
+			try {
+				dos.writeUTF(ix+" "+iy);
+			}catch(Exception e1) {
+			}
 		}
+		
 	}
 
 	@Override
